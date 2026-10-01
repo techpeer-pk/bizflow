@@ -789,29 +789,56 @@
     app.focus();
   });
 
-  /* ---------- PWA: offline support + install button ---------- */
-  const installBtn = document.getElementById("install-btn");
+  /* ---------- PWA: offline support + install pop-up ---------- */
+  const ASKED_KEY = "bizflow-install-asked";
+  const ASK_EVERY_MS = 7 * 24 * 60 * 60 * 1000;
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  const isIOS =
+    /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   let installPrompt = null;
+
+  // Ask at most once a week — and never if we can't remember that we already asked.
+  function shouldAsk() {
+    try {
+      if (Date.now() - Number(localStorage.getItem(ASKED_KEY) || 0) < ASK_EVERY_MS) return false;
+      localStorage.setItem(ASKED_KEY, String(Date.now()));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // Browsers open the install pop-up only right after a tap/click (never on page load),
+  // so the alert and the install pop-up come on the visitor's first tap.
+  function askToInstall() {
+    document.removeEventListener("click", askToInstall, true);
+    if (!installPrompt || !shouldAsk()) return;
+    window.alert("Install the Biz Flow app!\n\nIt opens from your home screen and works offline.");
+    const event = installPrompt;
+    installPrompt = null;
+    event.prompt().catch(() => {});
+  }
 
   // Chrome, Edge and Android fire this when the site can be installed.
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     installPrompt = e;
-    installBtn.hidden = false;
-  });
-
-  installBtn.addEventListener("click", async () => {
-    if (!installPrompt) return;
-    installPrompt.prompt();
-    await installPrompt.userChoice;
-    installPrompt = null;
-    installBtn.hidden = true;
+    document.addEventListener("click", askToInstall, true);
   });
 
   window.addEventListener("appinstalled", () => {
     installPrompt = null;
-    installBtn.hidden = true;
   });
+
+  // iPhone/iPad have no install pop-up: show the manual steps after the page loads.
+  if (isIOS && !isStandalone) {
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        if (shouldAsk()) window.alert('Install the Biz Flow app:\ntap the Share button, then "Add to Home Screen".');
+      }, 500);
+    });
+  }
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {

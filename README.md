@@ -27,7 +27,9 @@ All text, numbers, packages and contact details live in [`assets/js/data.js`](as
 
 ## Installable app (PWA)
 
-The site installs as an app on Android, Chrome and Edge (an **Install app** button appears in the header when the browser allows it) and on iPhone via **Share → Add to Home Screen**. Once opened, it works offline.
+The site installs as an app on Android, Chrome and Edge, and on iPhone via **Share → Add to Home Screen**. Once opened, it works offline.
+
+- **Install pop-up:** on the visitor's first tap, an `alert()` appears and then the browser's install pop-up opens (at most once a week). Browsers block the install pop-up on page load — it must follow a tap. On iPhone, which has no install pop-up, the `alert()` shows the Share → Add to Home Screen steps after the page loads.
 
 - Long-press the app icon for shortcuts: **Request a quote**, **Services**, **Packages**, **About**.
 - **When you change any file, bump `VERSION` in `sw.js`** (e.g. `v1` → `v2`). Pages, scripts and styles are fetched network-first, but images are served from the cache, so a new image only reaches returning visitors after a version bump.

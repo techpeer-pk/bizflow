@@ -2,7 +2,7 @@
  * Biz Flow service worker — makes the site installable and usable offline.
  * Bump VERSION whenever you change or add files, so visitors get a fresh cache.
  */
-const VERSION = "v1";
+const VERSION = "v2";
 const CACHE = `bizflow-${VERSION}`;
 const FONT_CACHE = "bizflow-fonts";
 
