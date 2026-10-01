@@ -12,11 +12,10 @@ window.BIZFLOW = {
   },
 
   contact: {
-    // CHECK: copied from the company profile PDF. Pakistani mobile numbers have
-    // 10 digits after +92; this one has 11. Correct all three fields together.
-    phoneDisplay: "+92 313 23653568",
-    phoneTel: "+9231323653568",
-    whatsapp: "9231323653568",
+    // Keep these three in sync: display format, tel: link, and wa.me number (no +).
+    phoneDisplay: "+92 307 8692110",
+    phoneTel: "+923078692110",
+    whatsapp: "923078692110",
     email: "hello@bizflow.co",
     website: "www.bizflow.co",
     office: "Karachi, Pakistan"
