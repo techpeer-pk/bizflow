@@ -22,6 +22,16 @@ All text, numbers, packages and contact details live in [`assets/js/data.js`](as
 | Page templates & routing | `assets/js/app.js` |
 | Styles & brand colours | `assets/css/style.css` |
 | Images & icons | `assets/img/` |
+| App name, icons, shortcuts (PWA) | `site.webmanifest` |
+| Offline cache (PWA) | `sw.js` |
+
+## Installable app (PWA)
+
+The site installs as an app on Android, Chrome and Edge (an **Install app** button appears in the header when the browser allows it) and on iPhone via **Share → Add to Home Screen**. Once opened, it works offline.
+
+- Long-press the app icon for shortcuts: **Request a quote**, **Services**, **Packages**, **About**.
+- **When you change any file, bump `VERSION` in `sw.js`** (e.g. `v1` → `v2`). Pages, scripts and styles are fetched network-first, but images are served from the cache, so a new image only reaches returning visitors after a version bump.
+- If you add a file the site needs offline, add it to `APP_SHELL` in `sw.js`.
 
 ## Pages
 

@@ -789,6 +789,36 @@
     app.focus();
   });
 
+  /* ---------- PWA: offline support + install button ---------- */
+  const installBtn = document.getElementById("install-btn");
+  let installPrompt = null;
+
+  // Chrome, Edge and Android fire this when the site can be installed.
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    installPrompt = e;
+    installBtn.hidden = false;
+  });
+
+  installBtn.addEventListener("click", async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    installPrompt = null;
+    installBtn.hidden = true;
+  });
+
+  window.addEventListener("appinstalled", () => {
+    installPrompt = null;
+    installBtn.hidden = true;
+  });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+
   if (!reduceMotion) document.documentElement.classList.add("js-reveal");
   renderFooter();
   window.addEventListener("hashchange", () => render(false));
