@@ -1445,6 +1445,26 @@ input[aria-invalid="true"] {
   border-color: #dc2626;
 }
 
+/* Phone field with a fixed +92 country code */
+.phone-input {
+  position: relative;
+}
+
+.phone-input span {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  color: var(--ink);
+  font-size: 0.98rem;
+  font-weight: 600;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.phone-input input {
+  padding-left: 52px;
+}
+
 textarea {
   min-height: 120px;
   resize: vertical;
@@ -1536,6 +1556,16 @@ textarea {
 
 .status.show {
   display: block;
+}
+
+.status.is-error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.status a {
+  color: inherit;
+  text-decoration: underline;
 }
 
 .contact-cards {

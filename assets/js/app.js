@@ -12,6 +12,8 @@
   const navToggle = document.querySelector(".nav-toggle");
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const DEFAULT_TITLE = "Biz Flow — Business Development & Marketing for Educational Institutes";
+  // Loaded on demand by the contact form; resolved next to this script so it works under any base path.
+  const FIREBASE_MODULE = new URL("firebase.js", document.currentScript.src).href;
 
   /* ---------- Icons (Lucide, ISC licence) ---------- */
   const ICONS = {
@@ -459,12 +461,12 @@
             <div class="form-grid">
               <div class="field">
                 <label for="f-name">Your name <span class="req" aria-hidden="true">*</span></label>
-                <input id="f-name" name="name" autocomplete="name" required aria-describedby="e-name">
+                <input id="f-name" name="name" autocomplete="name" maxlength="100" required aria-describedby="e-name">
                 <p class="err" id="e-name"></p>
               </div>
               <div class="field">
                 <label for="f-institute">Institute name <span class="req" aria-hidden="true">*</span></label>
-                <input id="f-institute" name="institute" autocomplete="organization" required aria-describedby="e-institute">
+                <input id="f-institute" name="institute" autocomplete="organization" maxlength="150" required aria-describedby="e-institute">
                 <p class="err" id="e-institute"></p>
               </div>
               <div class="field">
@@ -479,16 +481,19 @@
               </div>
               <div class="field">
                 <label for="f-campuses">Number of campuses</label>
-                <input id="f-campuses" name="campuses" type="number" min="1" inputmode="numeric">
+                <input id="f-campuses" name="campuses" type="number" min="1" max="10000" inputmode="numeric">
               </div>
               <div class="field">
-                <label for="f-phone">Phone / WhatsApp</label>
-                <input id="f-phone" name="phone" type="tel" autocomplete="tel" placeholder="03XX XXXXXXX" aria-describedby="e-phone">
+                <label for="f-phone">Phone / WhatsApp <span class="sr-only">(+92)</span></label>
+                <div class="phone-input">
+                  <span aria-hidden="true">+92</span>
+                  <input id="f-phone" name="phone" type="tel" autocomplete="tel-national" inputmode="numeric" placeholder="3XX XXXXXXX" aria-describedby="e-phone">
+                </div>
                 <p class="err" id="e-phone"></p>
               </div>
               <div class="field">
-                <label for="f-email">Email</label>
-                <input id="f-email" name="email" type="email" autocomplete="email" aria-describedby="e-email">
+                <label for="f-email">Email <span class="req" aria-hidden="true">*</span></label>
+                <input id="f-email" name="email" type="email" autocomplete="email" maxlength="150" required aria-describedby="e-email">
                 <p class="err" id="e-email"></p>
               </div>
               <fieldset class="field full">
@@ -514,18 +519,21 @@
               </div>
               <div class="field">
                 <label for="f-city">City</label>
-                <input id="f-city" name="city" autocomplete="address-level2">
+                <input id="f-city" name="city" autocomplete="address-level2" maxlength="100">
               </div>
               <div class="field full">
                 <label for="f-message">Message</label>
-                <textarea id="f-message" name="message" rows="5" placeholder="What would you like to improve — costs, admissions, IT, events?"></textarea>
+                <textarea id="f-message" name="message" rows="5" maxlength="5000" placeholder="What would you like to improve — costs, admissions, IT, events?"></textarea>
               </div>
             </div>
             <div class="form-actions">
-              <button class="btn btn-dark" type="submit" value="email">${icon("mail")} Send via email</button>
+              <button class="btn btn-dark" type="submit" value="form">${icon("mail")} Submit Request</button>
+              <!-- Send via WhatsApp — turned off. To bring it back, remove the comment markers here, in the note below
+                   and around the "whatsapp" block in bindContactForm().
               <button class="btn btn-whatsapp" type="submit" value="whatsapp">${icon("message")} Send via WhatsApp</button>
+              -->
             </div>
-            <p class="form-note">Your message opens in your email app or WhatsApp, ready to send. Nothing is stored on this website.</p>
+            <p class="form-note">Your enquiry goes straight to the Biz Flow team.<!-- Prefer to chat? Send it via WhatsApp instead. --></p>
             <p class="status" id="form-status" role="status" aria-live="polite"></p>
           </form>
 
@@ -587,17 +595,63 @@
       if (err) err.textContent = msg || "";
     };
 
+    // Pakistani mobile numbers: "+92" is fixed in the field and the visitor types the 10 digits after it
+    // (3XX XXXXXXX). Pasted "0300…", "92300…", "+92 300…" or "0092 300…" lose their prefix. Extra digits are
+    // kept (not cut off) so a wrong number fails validation instead of being saved silently.
+    const phoneDigits = (raw) => {
+      let d = raw.replace(/\D/g, "");
+      if (d.startsWith("0092")) d = d.slice(4);
+      else if (d.startsWith("92") && d.length > 10) d = d.slice(2);
+      if (d.startsWith("0")) d = d.slice(1);
+      return d;
+    };
+    const formatPhone = (d) => (d.length > 3 ? `${d.slice(0, 3)} ${d.slice(3)}` : d);
+    const phoneInput = form.elements.phone;
+    const tidyPhone = () => (phoneInput.value = formatPhone(phoneDigits(phoneInput.value)));
+    // Reformat while typing only when the caret is at the end, so editing mid-number doesn't jump the caret.
+    phoneInput.addEventListener("input", () => {
+      if (phoneInput.selectionStart === phoneInput.value.length) tidyPhone();
+    });
+    phoneInput.addEventListener("blur", tidyPhone);
+
+    // The Firebase SDK is only fetched once someone sends the form; a failed load is retried next time.
+    let firebase = null;
+    const loadFirebase = () =>
+      (firebase =
+        firebase ||
+        import(FIREBASE_MODULE).catch((err) => {
+          firebase = null;
+          throw err;
+        }));
+
+    const status = document.getElementById("form-status");
+    const showStatus = (html, isError) => {
+      status.innerHTML = html;
+      status.classList.toggle("is-error", Boolean(isError));
+      status.classList.add("show");
+    };
+    const setBusy = (busy) => {
+      form.setAttribute("aria-busy", String(busy));
+      form.querySelectorAll('button[type="submit"]').forEach((b) => (b.disabled = busy));
+    };
+
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const via = (e.submitter && e.submitter.value) || "email";
+      if (form.getAttribute("aria-busy") === "true") return;
+      const via = (e.submitter && e.submitter.value) || "form";
       const v = (n) => (form.elements[n].value || "").trim();
       const errors = [];
 
       ["name", "institute", "phone", "email"].forEach((n) => setError(n, ""));
       if (!v("name")) errors.push(["name", "Please enter your name."]);
       if (!v("institute")) errors.push(["institute", "Please enter your institute's name."]);
-      if (!v("phone") && !v("email")) errors.push(["phone", "Add a phone number or an email so we can reply."]);
-      if (v("email") && !form.elements.email.checkValidity()) errors.push(["email", "Please enter a valid email address."]);
+      const phone = phoneDigits(v("phone"));
+      if (v("phone") && !/^3\d{9}$/.test(phone))
+        errors.push(["phone", "Enter a mobile number after +92 — 10 digits starting with 3, like 300 1234567."]);
+      // Same check as firestore.rules: something@domain.tld (the browser alone would accept "name@host").
+      if (!v("email")) errors.push(["email", "Please enter your email address."]);
+      else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v("email")) || !form.elements.email.checkValidity())
+        errors.push(["email", "Please enter a valid email address, like name@school.edu.pk."]);
 
       if (errors.length) {
         errors.forEach(([n, m]) => setError(n, m));
@@ -605,9 +659,8 @@
         return;
       }
 
-      const services = [...form.querySelectorAll('input[name="services"]:checked')]
-        .map((b) => divisionById(b.value).name)
-        .join(", ");
+      const serviceIds = [...form.querySelectorAll('input[name="services"]:checked')].map((b) => b.value);
+      const services = serviceIds.map((id) => divisionById(id).name).join(", ");
       const pkgName = (D.packages.find((p) => p.id === v("package")) || {}).name;
       const lines = [
         "Hello Biz Flow,",
@@ -617,24 +670,56 @@
         v("type") && `Type: ${v("type")}`,
         v("campuses") && `Campuses: ${v("campuses")}`,
         v("city") && `City: ${v("city")}`,
-        v("phone") && `Phone: ${v("phone")}`,
+        phone && `Phone: +92 ${formatPhone(phone)}`,
         v("email") && `Email: ${v("email")}`,
         services && `Interested in: ${services}`,
         `Package: ${pkgName || "Not sure yet"}`,
         v("message") && ["", v("message")].join("\n")
       ].filter(Boolean);
       const text = lines.join("\n");
-      const status = document.getElementById("form-status");
 
-      if (via === "whatsapp") {
-        window.open(`https://wa.me/${D.contact.whatsapp}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
-        status.textContent = "WhatsApp should open in a new tab with your message ready — just press send.";
-      } else {
-        const subject = `Quote request — ${v("institute")}`;
-        window.location.href = `mailto:${D.contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
-        status.textContent = `Your email app should open with the message ready. If it doesn't, write to us at ${D.contact.email}.`;
-      }
-      status.classList.add("show");
+      // Field list must match isEnquiry() in firestore.rules.
+      const campuses = parseInt(v("campuses"), 10);
+      const enquiry = {
+        name: v("name"),
+        institute: v("institute"),
+        type: v("type"),
+        campuses: campuses >= 1 && campuses <= 10000 ? campuses : null,
+        phone: phone ? `+92${phone}` : "",
+        email: v("email"),
+        services: serviceIds,
+        package: v("package"),
+        city: v("city"),
+        message: v("message"),
+        via
+      };
+      const save = () => loadFirebase().then((m) => m.saveEnquiry(enquiry));
+
+      // Send via WhatsApp — turned off (its button is commented out in contactView()).
+      // if (via === "whatsapp") {
+      //   // Open WhatsApp first (a delayed window.open is blocked as a pop-up), then keep a copy in Firestore.
+      //   window.open(`https://wa.me/${D.contact.whatsapp}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+      //   showStatus("WhatsApp should open in a new tab with your message ready — just press send.");
+      //   save().catch(() => {});
+      //   return;
+      // }
+
+      setBusy(true);
+      showStatus("Sending your enquiry…");
+      save()
+        .then(() => {
+          form.reset();
+          showStatus("Thank you! Your enquiry has been sent — we'll be in touch soon.");
+        })
+        .catch(() => {
+          const subject = `Quote request — ${v("institute")}`;
+          const mailto = `mailto:${D.contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+          showStatus(
+            `We couldn't send your enquiry just now. Please try again, or <a href="${mailto}">send it by email</a> instead.`,
+            true
+          );
+        })
+        .finally(() => setBusy(false));
     });
   }
 

@@ -2,7 +2,7 @@
  * Biz Flow service worker — makes the site installable and usable offline.
  * Bump VERSION whenever you change or add files, so visitors get a fresh cache.
  */
-const VERSION = "v2";
+const VERSION = "v6";
 const CACHE = `bizflow-${VERSION}`;
 const FONT_CACHE = "bizflow-fonts";
 
@@ -57,6 +57,9 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (url.origin !== self.location.origin) return;
+
+  // The admin page (/admino) is online-only and must never replace the cached site page.
+  if (req.mode === "navigate" && url.pathname.includes("/admino")) return;
 
   // Pages: network first so updates show straight away; offline falls back to the cached app.
   if (req.mode === "navigate") {

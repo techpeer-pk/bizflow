@@ -1,0 +1,52 @@
+rules_version = '2';
+
+// The public website can only add new enquiries. Admins (signed in on /admino) can read them, change
+// their status and delete them. Keep the field list in sync with `enquiry` in assets/js/app.js.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isText(v, max) {
+      return v is string && v.size() <= max;
+    }
+
+    function isEnquiry(d) {
+      return d.keys().hasOnly(['name', 'institute', 'type', 'campuses', 'phone', 'email', 'services',
+                               'package', 'city', 'message', 'via', 'createdAt'])
+        && d.keys().hasAll(['name', 'institute', 'type', 'campuses', 'phone', 'email', 'services',
+                            'package', 'city', 'message', 'via', 'createdAt'])
+        && isText(d.name, 100) && d.name.size() > 0
+        && isText(d.institute, 150) && d.institute.size() > 0
+        && isText(d.type, 50)
+        && (d.campuses == null || (d.campuses is int && d.campuses >= 1 && d.campuses <= 10000))
+        && isText(d.phone, 13)
+        && (d.phone == '' || d.phone.matches('^[+]923[0-9]{9}$'))   // +92 3XX XXXXXXX, no spaces
+        && isText(d.email, 150)
+        && d.email.matches('^[^@ ]+@[^@ ]+[.][^@ ]+$')   // required: something@domain.tld
+        && d.services is list && d.services.size() <= 10
+        && isText(d.package, 50)
+        && isText(d.city, 100)
+        && isText(d.message, 5000)
+        && d.via in ['form', 'whatsapp']
+        && d.createdAt == request.time;
+    }
+
+    // Admins are added by hand in the Firebase console: a document in "admins" whose ID is the user's UID.
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    match /enquiries/{id} {
+      allow create: if isEnquiry(request.resource.data);
+      allow read, delete: if isAdmin();
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['new', 'contacted', 'closed'];
+    }
+
+    // A signed-in user may check their own admin entry (the admin page uses this); nothing else.
+    match /admins/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
