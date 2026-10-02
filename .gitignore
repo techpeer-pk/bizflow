@@ -1,0 +1,28 @@
+# Firebase project keys — copy assets/js/firebase-config.example.js to create it.
+# Never commit it; the pre-commit hook in .githooks/ also blocks it.
+assets/js/firebase-config.js
+
+# Any other secrets that may appear later
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+*service-account*.json
+*serviceAccount*.json
+*firebase-adminsdk*.json
+credentials*.json
+.runtimeconfig.json
+
+# Firebase CLI / emulator output
+.firebase/
+*.log
+
+# Tooling
+node_modules/
+
+# Device screenshots taken while testing (same rule as the hosting ignore list in firebase.json)
+*iPhone*.png
