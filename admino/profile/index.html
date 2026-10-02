@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Profile · Biz Flow Admin</title>
+  <meta name="theme-color" content="#0a2540">
+  <link rel="icon" type="image/png" href="../../assets/img/favicon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <link rel="stylesheet" href="../../assets/css/admin.css">
+</head>
+<body>
+  <header class="admin-bar">
+    <div class="container">
+      <a class="brand" href="../../"><img src="../../assets/img/mark.png" alt="" width="69" height="34"><span>Biz Flow</span></a>
+      <div class="admin-user" id="admin-user" hidden>
+        <span id="admin-email"></span>
+        <button class="btn btn-sm btn-line" type="button" id="sign-out">Sign out</button>
+      </div>
+    </div>
+    <nav class="admin-tabs" id="admin-tabs" aria-label="Admin" hidden>
+      <a href="../">Enquiries</a>
+      <a href="./" aria-current="page">Profile</a>
+    </nav>
+  </header>
+
+  <main class="container admin-main">
+    <div class="admin-loading" id="view-loading" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Loading…</span>
+    </div>
+
+    <section class="profile" id="view-profile" hidden>
+      <h1>Profile</h1>
+
+      <div class="form">
+        <h2>Account</h2>
+        <dl class="profile-info">
+          <div><dt>Email</dt><dd id="p-email"></dd></div>
+          <div><dt>Last signed in</dt><dd id="p-last"></dd></div>
+          <div><dt>Account created</dt><dd id="p-created"></dd></div>
+        </dl>
+      </div>
+
+      <form class="form" id="password-form" novalidate>
+        <h2>Change password</h2>
+        <!-- Lets password managers save the new password against the right account. -->
+        <input type="email" name="username" id="p-username" autocomplete="username" readonly hidden>
+        <div class="field">
+          <label for="p-current">Current password</label>
+          <input id="p-current" name="current" type="password" autocomplete="current-password" required>
+        </div>
+        <div class="field">
+          <label for="p-new">New password</label>
+          <input id="p-new" name="next" type="password" autocomplete="new-password" minlength="8" required aria-describedby="p-new-hint">
+          <p class="field-hint" id="p-new-hint">At least 8 characters.</p>
+        </div>
+        <div class="field">
+          <label for="p-confirm">Confirm new password</label>
+          <input id="p-confirm" name="confirm" type="password" autocomplete="new-password" required>
+        </div>
+        <button class="btn btn-dark" type="submit">Update password</button>
+        <p class="err" id="pw-error" role="alert"></p>
+        <p class="status" id="pw-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <noscript><p class="center">Please enable JavaScript to use the admin pages.</p></noscript>
+  </main>
+
+  <script type="module" src="../../assets/js/profile.js"></script>
+</body>
+</html>

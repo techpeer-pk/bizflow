@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin · Biz Flow</title>
+  <meta name="theme-color" content="#0a2540">
+  <link rel="icon" type="image/png" href="../assets/img/favicon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <header class="admin-bar">
+    <div class="container">
+      <a class="brand" href="../"><img src="../assets/img/mark.png" alt="" width="69" height="34"><span>Biz Flow</span></a>
+      <div class="admin-user" id="admin-user" hidden>
+        <span id="admin-email"></span>
+        <button class="btn btn-sm btn-line" type="button" id="sign-out">Sign out</button>
+      </div>
+    </div>
+    <nav class="admin-tabs" id="admin-tabs" aria-label="Admin" hidden>
+      <a href="./" aria-current="page">Enquiries</a>
+      <a href="profile/">Profile</a>
+    </nav>
+  </header>
+
+  <main class="container admin-main">
+    <div class="admin-loading" id="view-loading" role="status">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Loading…</span>
+    </div>
+
+    <form class="form admin-card" id="view-login" novalidate hidden>
+      <h1>Admin sign in</h1>
+      <div class="field">
+        <label for="a-email">Email</label>
+        <input id="a-email" name="email" type="email" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <div class="field-row">
+          <label for="a-password">Password</label>
+          <button class="link-btn" type="button" id="forgot-link">Forgot password?</button>
+        </div>
+        <div class="pw-wrap">
+          <input id="a-password" name="password" type="password" autocomplete="current-password" required>
+          <button class="pw-toggle" type="button" data-toggle="a-password" aria-label="Show password" aria-pressed="false">
+            <svg class="icon pw-show" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="icon pw-hide" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><path d="m2 2 20 20"/></svg>
+          </button>
+        </div>
+      </div>
+      <button class="btn btn-dark" type="submit">Sign in</button>
+      <p class="err" id="login-error" role="alert"></p>
+    </form>
+
+    <form class="form admin-card" id="view-reset" novalidate hidden>
+      <h1>Reset password</h1>
+      <p class="muted">Enter your email and we'll send you a link to set a new password.</p>
+      <div class="field">
+        <label for="r-email">Email</label>
+        <input id="r-email" name="email" type="email" autocomplete="username" required>
+      </div>
+      <button class="btn btn-dark" type="submit">Send reset link</button>
+      <p class="err" id="reset-error" role="alert"></p>
+      <p class="status" id="reset-status" role="status" aria-live="polite"></p>
+      <button class="link-btn" type="button" id="back-to-login">← Back to sign in</button>
+    </form>
+
+    <section class="form admin-card" id="view-denied" hidden>
+      <h1>No admin access</h1>
+      <p>This account is signed in, but it isn't an admin. To give it access, add a document to the
+        <code>admins</code> collection in Firestore with this document ID:</p>
+      <p><code id="denied-uid"></code></p>
+    </section>
+
+    <section id="view-enquiries" hidden>
+      <div class="admin-head">
+        <h1>Enquiries <span class="muted" id="enquiry-count"></span></h1>
+        <button class="btn btn-sm btn-dark" type="button" id="refresh">Refresh</button>
+        <p class="status" id="list-status" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="dt-card">
+        <div class="dt-toolbar">
+          <label class="dt-search">
+            <span class="sr-only">Search enquiries</span>
+            <input type="search" id="dt-search" placeholder="Search name, email, phone, institute…" autocomplete="off">
+          </label>
+          <label class="dt-size">
+            Show
+            <select id="dt-size">
+              <option>10</option>
+              <option>25</option>
+              <option>50</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="dt-scroll">
+          <table class="dt">
+            <thead>
+              <tr>
+                <th scope="col" data-sort="name" aria-sort="none"><button type="button">Name</button></th>
+                <th scope="col" data-sort="email" aria-sort="none"><button type="button">Email</button></th>
+                <th scope="col" data-sort="phone" aria-sort="none"><button type="button">Phone</button></th>
+                <th scope="col" class="dt-action"><span class="sr-only">Details</span></th>
+              </tr>
+            </thead>
+            <tbody id="dt-body"></tbody>
+          </table>
+        </div>
+
+        <div class="dt-footer">
+          <p class="muted" id="dt-info"></p>
+          <div class="dt-pager">
+            <button class="btn btn-sm btn-line" type="button" id="dt-prev">Previous</button>
+            <span id="dt-page"></span>
+            <button class="btn btn-sm btn-line" type="button" id="dt-next">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <dialog class="dlg" id="enquiry-dialog" aria-labelledby="dlg-title">
+      <div class="dlg-inner">
+        <div class="dlg-head">
+          <div>
+            <h2 id="dlg-title"></h2>
+            <p class="muted" id="dlg-sub"></p>
+          </div>
+          <button class="dlg-x" type="button" data-close aria-label="Close">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        <dl class="dlg-meta" id="dlg-meta"></dl>
+
+        <h3 class="dlg-label">Message</h3>
+        <p class="dlg-message" id="dlg-message"></p>
+
+        <div class="dlg-actions">
+          <label class="dlg-status-field">
+            Status
+            <select id="dlg-status"></select>
+          </label>
+          <button class="btn btn-sm btn-line btn-danger" type="button" id="dlg-delete">Delete</button>
+          <button class="btn btn-sm btn-dark" type="button" data-close>Close</button>
+        </div>
+        <p class="status" id="dlg-note" role="status" aria-live="polite"></p>
+      </div>
+    </dialog>
+
+    <noscript><p class="center">Please enable JavaScript to use the admin page.</p></noscript>
+  </main>
+
+  <script src="../assets/js/data.js"></script>
+  <script type="module" src="../assets/js/admin.js"></script>
+</body>
+</html>

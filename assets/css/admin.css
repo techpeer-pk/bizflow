@@ -1,0 +1,138 @@
+/*
+ * Admin pages (/admino and /admino/profile) — layered on top of style.css.
+ */
+[hidden] { display: none !important; }
+body { min-height: 100vh; background: var(--surface); }
+h1 { margin: 0; font-size: 1.5rem; }
+code { overflow-wrap: anywhere; }
+
+.admin-bar { border-bottom: 1px solid var(--line); background: #fff; }
+.admin-bar .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; padding: 12px; }
+.admin-user { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 0.9rem; overflow-wrap: anywhere; }
+.admin-main { padding-block: 32px 64px; }
+.admin-card { display: grid; gap: 18px; max-width: 420px; margin: 32px auto 0; }
+.admin-card p { margin: 0; }
+.admin-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.admin-head .status { flex-basis: 100%; margin: 0; }
+
+.btn-line { border-color: var(--line-strong); background: #fff; color: var(--ink); }
+.btn-line:hover { border-color: var(--ink); }
+
+.btn-danger { color: #b91c1c; }
+.btn-danger:hover { border-color: #b91c1c; }
+
+/* Data table */
+.dt-card { border: 1px solid var(--line); border-radius: 14px; background: #fff; overflow: hidden; }
+.dt-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.dt-search { flex: 1 1 260px; max-width: 420px; }
+.dt-search input { padding: 9px 12px; font-size: 0.95rem; }
+.dt-size { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.9rem; }
+.dt-size select { width: auto; padding: 7px 10px; font-size: 0.9rem; }
+/* position: relative keeps the absolutely positioned .sr-only header inside the scroll box,
+   otherwise it sits past the table's right edge and makes the whole page scroll sideways. */
+.dt-scroll { position: relative; overflow-x: auto; }
+.dt { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.dt th, .dt td { padding: 12px 16px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+.dt td { color: var(--ink); }
+.dt tbody tr:hover { background: var(--surface); }
+.dt tbody tr:last-child td { border-bottom: 0; }
+.dt th { background: var(--surface); color: var(--muted); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.dt th button { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; }
+.dt th button::after { content: "↕"; opacity: 0.35; }
+.dt th[aria-sort="ascending"] button::after { content: "↑"; opacity: 1; }
+.dt th[aria-sort="descending"] button::after { content: "↓"; opacity: 1; }
+.dt th[aria-sort="ascending"], .dt th[aria-sort="descending"] { color: var(--ink); }
+.dt .dt-action { width: 1%; text-align: right; }
+.dt-empty { padding: 32px 16px !important; color: var(--muted) !important; text-align: center !important; white-space: normal !important; }
+.dt-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.dt-footer p { margin: 0; font-size: 0.88rem; }
+.dt-pager { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.88rem; }
+.dt-pager .btn:disabled { opacity: 0.45; cursor: default; }
+
+/* Detail dialog */
+.dlg { width: min(640px, calc(100% - 32px)); max-height: calc(100% - 32px); padding: 0; border: 0; border-radius: 18px; box-shadow: 0 24px 60px rgba(10, 37, 64, 0.3); color: var(--text); }
+.dlg::backdrop { background: rgba(7, 26, 46, 0.55); }
+.dlg-inner { padding: 24px; }
+.dlg-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.dlg-head h2 { margin: 0; font-size: 1.3rem; }
+.dlg-head p { margin: 4px 0 0; font-size: 0.9rem; }
+.dlg-x { display: grid; place-items: center; flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 10px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.dlg-x:hover { background: var(--line); }
+.dlg-x .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.dlg-meta { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px 20px; margin: 22px 0 0; }
+.dlg-meta dt, .dlg-label { margin: 0; color: var(--muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.dlg-meta dd { margin: 2px 0 0; color: var(--ink); overflow-wrap: anywhere; }
+.dlg-label { margin-top: 22px; }
+.dlg-message { margin: 6px 0 0; padding: 12px 14px; border-radius: 10px; background: var(--surface); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.dlg-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+.dlg-status-field { display: flex; align-items: center; gap: 8px; margin-right: auto; color: var(--ink); font-size: 0.9rem; font-weight: 600; }
+.dlg-status-field select { width: auto; padding: 7px 10px; font-size: 0.9rem; }
+body:has(.dlg[open]) { overflow: hidden; }
+
+/* Pre-loader */
+.spinner { display: inline-block; flex: none; width: 1.1em; height: 1.1em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 1.8s; } }
+.admin-loading { display: grid; justify-items: center; gap: 14px; padding-top: 80px; color: var(--muted); }
+.admin-loading .spinner { width: 36px; height: 36px; border-width: 3px; color: var(--teal); }
+.btn[aria-busy="true"] { cursor: progress; opacity: 0.85; }
+
+/* Sign-in extras: forgot-password link and show/hide password */
+.field-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.link-btn { justify-self: start; padding: 0; border: 0; background: none; color: var(--teal-dark); font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+.link-btn:hover { text-decoration: underline; }
+.admin-card .status { margin: 0; }
+.pw-wrap { position: relative; }
+.pw-wrap input { padding-right: 48px; }
+.pw-wrap input::-ms-reveal, .pw-wrap input::-ms-clear { display: none; } /* Edge's own eye button */
+.pw-toggle { position: absolute; top: 50%; right: 5px; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--muted); cursor: pointer; transform: translateY(-50%); }
+.pw-toggle:hover { background: var(--surface); color: var(--ink); }
+.pw-toggle .icon { width: 20px; height: 20px; }
+
+/* Admin tabs (Enquiries | Profile) */
+.admin-tabs { display: flex; gap: 22px; max-width: var(--container); margin: 0 auto; padding: 0 12px; }
+.admin-tabs a { padding: 10px 0; border-bottom: 2px solid transparent; color: var(--muted); font-size: 0.92rem; font-weight: 600; text-decoration: none; }
+.admin-tabs a:hover { color: var(--ink); }
+.admin-tabs a[aria-current="page"] { border-bottom-color: var(--teal); color: var(--ink); }
+
+/* Profile */
+.profile { display: grid; gap: 18px; max-width: 520px; }
+.profile h2 { margin: 0; font-size: 1.15rem; }
+.profile .form { display: grid; gap: 16px; }
+.profile-info { display: grid; gap: 12px; margin: 0; }
+.profile-info div { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 12px; }
+.profile-info dt { color: var(--muted); font-size: 0.9rem; }
+.profile-info dd { margin: 0; color: var(--ink); overflow-wrap: anywhere; }
+.field-hint { margin: 0; color: var(--muted); font-size: 0.82rem; }
+
+/* Small screens */
+@media (max-width: 600px) {
+  h1 { font-size: 1.3rem; }
+  .admin-main { padding-block: 20px 40px; }
+  .admin-card { margin-top: 12px; }
+  .admin-user span { max-width: 42vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .profile-info div { grid-template-columns: 1fr; gap: 2px; }
+
+  /* iOS zooms into fields smaller than 16px */
+  input, select { font-size: 16px !important; }
+
+  .dt-toolbar { padding: 12px; }
+  .dt-search { flex-basis: 100%; max-width: none; }
+
+  /* The table keeps its columns; its rows scroll sideways inside .dt-scroll, not the page. */
+  .dt th, .dt td { padding: 10px 12px; }
+
+  .dt-footer { flex-direction: column; align-items: stretch; padding: 12px; text-align: center; }
+  .dt-pager { justify-content: space-between; }
+  .dt-pager .btn { flex: 1; }
+
+  /* The dialog stays centred, with a 16px gap around it. */
+  .dlg { width: calc(100% - 32px); max-width: calc(100% - 32px); max-height: calc(100% - 32px); margin: auto; border-radius: 16px; }
+  .dlg-inner { padding: 20px 16px; }
+  .dlg-head h2 { font-size: 1.15rem; }
+  .dlg-meta { grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-top: 18px; }
+  .dlg-meta .wide { grid-column: 1 / -1; }
+  .dlg-status-field { flex-basis: 100%; margin-right: 0; }
+  .dlg-status-field select { flex: 1; }
+  .dlg-actions .btn { flex: 1; }
+}

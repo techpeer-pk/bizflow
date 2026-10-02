@@ -1,0 +1,3 @@
+# Shell scripts must keep LF line endings, even on Windows clones.
+.githooks/* text eol=lf
+*.sh text eol=lf
